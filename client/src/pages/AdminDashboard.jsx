@@ -248,6 +248,20 @@ const AdminDashboard = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700">
+                        Category
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-black focus:border-black sm:text-sm"
+                        value={formData.category}
+                        onChange={(e) =>
+                          setFormData({ ...formData, category: e.target.value })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
                         Description
                       </label>
                       <button
@@ -303,20 +317,7 @@ const AdminDashboard = () => {
                         />
                       </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Category
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-black focus:border-black sm:text-sm"
-                        value={formData.category}
-                        onChange={(e) =>
-                          setFormData({ ...formData, category: e.target.value })
-                        }
-                      />
-                    </div>
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700">
                         Image URL
