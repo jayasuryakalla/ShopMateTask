@@ -2,7 +2,16 @@ const { getDB } = require("../config/db");
 const { ObjectId } = require("mongodb");
 const {
   generateProductDescription: aiGenerateProductDescription,
+  generateProductDetailsFromImage,
+  generateEmbedding,
 } = require("../services/aiServices");
+const { Pinecone } = require("@pinecone-database/pinecone");
+
+const pinecone = new Pinecone({
+  apiKey: process.env.PINECONE_API_KEY,
+});
+const index = pinecone.index(process.env.PINECONE_INDEX);
+
 const collectionName = "products";
 // Helper to get collection
 const getCollection = () => getDB().collection(collectionName);
@@ -154,6 +163,91 @@ const generateProductDescription = async (req, res) => {
   }
 };
 
+// @desc    Generate product details from image
+// @route   POST /api/products/generate-details-from-image
+const generateDetailsFromImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+    console.log("In generateDetailsFromImage", req.file);
+    const details = await generateProductDetailsFromImage(
+      req.file.buffer,
+      req.file.mimetype
+    );
+    res.status(200).json({ success: true, data: details });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, error: "This is an error: " + error.message });
+  }
+};
+
+const semanticSearch = async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q) {
+      return res.status(400).json({ message: "Search query is required" });
+    }
+
+    console.log(`[Semantic Search] Query: "${q}"`);
+
+    // 1. Generate embedding for query
+    const vector = await generateEmbedding(q);
+    console.log(`[Semantic Search] Generated vector length: ${vector.length}`);
+
+    // 2. Query Pinecone
+    const searchResponse = await index.query({
+      vector: vector,
+      topK: 10,
+      includeMetadata: true,
+    });
+
+    // 3. Extract matches
+    const matches = searchResponse.matches || [];
+    console.log(`[Semantic Search] Pinecone found ${matches.length} matches`);
+
+    if (matches.length === 0) {
+      return res.json([]);
+    }
+
+    // 4. Return results
+    // Fetch full product details from MongoDB to ensure we have images etc.
+    const ids = matches.map((match) => new ObjectId(match.id));
+    const products = await getCollection()
+      .find({ _id: { $in: ids } })
+      .toArray();
+
+    console.log(
+      `[Semantic Search] MongoDB returned ${products.length} products`
+    );
+
+    const results = products.map((product) => {
+      const match = matches.find((m) => m.id === product._id.toString());
+      return {
+        ...product,
+        score: match ? match.score : 0,
+      };
+    });
+
+    console.log(
+      "[Semantic Search] All matches with scores:",
+      results.map((r) => ({ name: r.name, score: r.score }))
+    );
+
+    const finalResults = results
+      .filter((product) => product.score > 0.45) // Filter out low relevance matches
+      .sort((a, b) => b.score - a.score); // Re-sort by score
+
+    res.json(finalResults);
+  } catch (error) {
+    console.error("Semantic Search Error:", error);
+    res
+      .status(500)
+      .json({ message: "Semantic search failed", error: error.message });
+  }
+};
+
 module.exports = {
   getProducts,
   getProductById,
@@ -161,4 +255,6 @@ module.exports = {
   updateProduct,
   deleteProduct,
   generateProductDescription,
+  generateDetailsFromImage,
+  semanticSearch,
 };

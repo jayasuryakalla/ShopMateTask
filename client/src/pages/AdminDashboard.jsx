@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Trash2, Edit, Plus, X, Save } from "lucide-react";
+import { Trash2, Edit, Plus, X, Save, Wand2, Camera } from "lucide-react";
 
 const AdminDashboard = () => {
   const [products, setProducts] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
+  const [isGeneratingFromImage, setIsGeneratingFromImage] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -53,6 +55,7 @@ const AdminDashboard = () => {
       }
       setIsModalOpen(false);
       setEditingProduct(null);
+      setImageFile(null);
       setFormData({
         name: "",
         description: "",
@@ -67,23 +70,12 @@ const AdminDashboard = () => {
     }
   };
 
-  const openEditModal = (product) => {
-    setEditingProduct(product);
-    setFormData({
-      name: product.name,
-      description: product.description,
-      price: product.price,
-      category: product.category,
-      stock: product.stock,
-      image: product.image,
-    });
-    setIsModalOpen(true);
-  };
   const generateDescription = async () => {
     if (!formData.name && !formData.category) {
-      alert("Please enter a product name or category first.");
+      alert("Please enter a product name or category first");
       return;
     }
+
     setIsGeneratingDescription(true);
     try {
       const response = await axios.post(
@@ -99,14 +91,70 @@ const AdminDashboard = () => {
       }));
     } catch (error) {
       console.error("Error generating description:", error);
-      alert("Failed to generate description. Please try again.");
+      alert("Failed to generate description");
     } finally {
       setIsGeneratingDescription(false);
     }
   };
 
+  const generateDetailsFromImage = async () => {
+    if (!imageFile) {
+      alert("Please upload an image first");
+      return;
+    }
+
+    setIsGeneratingFromImage(true);
+    const data = new FormData();
+    data.append("image", imageFile);
+
+    try {
+      console.log("Generating details from image...");
+      const response = await axios.post(
+        "http://localhost:3001/api/products/generate-details-from-image",
+        data,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+      const { name, description, category } = response.data.data;
+      setFormData((prev) => ({ ...prev, name, description, category }));
+    } catch (error) {
+      console.error("Error generating details:", error);
+      alert("Failed to generate details from image");
+    } finally {
+      setIsGeneratingFromImage(false);
+    }
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setFormData((prev) => ({ ...prev, image: e.target.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const openEditModal = (product) => {
+    setEditingProduct(product);
+    setImageFile(null);
+    setFormData({
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      category: product.category,
+      stock: product.stock,
+      image: product.image,
+    });
+    setIsModalOpen(true);
+  };
+
   const openAddModal = () => {
     setEditingProduct(null);
+    setImageFile(null);
     setFormData({
       name: "",
       description: "",
@@ -213,7 +261,7 @@ const AdminDashboard = () => {
               className="hidden sm:inline-block sm:align-middle sm:h-screen"
               aria-hidden="true"
             >
-              &#8203;
+              ​
             </span>
             <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
               <form onSubmit={handleSubmit}>
@@ -231,6 +279,37 @@ const AdminDashboard = () => {
                     </button>
                   </div>
 
+                  {/* Image Upload */}
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Image
+                        </label>
+                        {imageFile && (
+                          <button
+                            type="button"
+                            onClick={generateDetailsFromImage}
+                            disabled={isGeneratingFromImage}
+                            className="text-xs text-indigo-600 hover:text-indigo-800 flex items-center gap-1 disabled:opacity-50"
+                          >
+                            <Camera size={14} />
+                            {isGeneratingFromImage
+                              ? "Analyzing..."
+                              : "Snap & Sell"}
+                          </button>
+                        )}
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-black focus:border-black sm:text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Product Details */}
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700">
@@ -261,19 +340,21 @@ const AdminDashboard = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Description
-                      </label>
-                      <button
-                        type="button"
-                        onClick={generateDescription}
-                        disabled={isGeneratingDescription}
-                        className=" font-bold bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 bg-clip-text text-transparent "
-                      >
-                        {isGeneratingDescription
-                          ? "Generating..."
-                          : "Generate with AI"}
-                      </button>
+                      <div className="flex justify-between items-center mb-1">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Description
+                        </label>
+                        <button
+                          type="button"
+                          onClick={generateDescription}
+                          disabled={isGeneratingDescription}
+                          className="font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent"
+                        >
+                          {isGeneratingDescription
+                            ? "Generating..."
+                            : "Generate with AI"}
+                        </button>
+                      </div>
                       <textarea
                         required
                         rows={3}
@@ -317,7 +398,6 @@ const AdminDashboard = () => {
                         />
                       </div>
                     </div>
-
                     <div>
                       <label className="block text-sm font-medium text-gray-700">
                         Image URL
