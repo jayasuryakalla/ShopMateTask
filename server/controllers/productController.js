@@ -1,17 +1,30 @@
 const { getDB } = require("../config/db");
 const { ObjectId } = require("mongodb");
 const {
+<<<<<<< HEAD
   generateProductDescription,
+=======
+  generateProductDescription: aiGenerateProductDescription,
+>>>>>>> 8f2c80dec57338e578dbe92e8ce8f266c78eabb5
   generateProductDetailsFromImage,
   generateEmbedding,
 } = require("../services/aiServices");
 const { Pinecone } = require("@pinecone-database/pinecone");
 
+<<<<<<< HEAD
 const collectionName = "products";
 const pinecone = new Pinecone({ apiKey: process.env.PINECONE_API_KEY });
 
 const index = pinecone.index(process.env.PINECONE_INDEX);
 
+=======
+const pinecone = new Pinecone({
+  apiKey: process.env.PINECONE_API_KEY,
+});
+const index = pinecone.index(process.env.PINECONE_INDEX);
+
+const collectionName = "products";
+>>>>>>> 8f2c80dec57338e578dbe92e8ce8f266c78eabb5
 // Helper to get collection
 const getCollection = () => getDB().collection(collectionName);
 
@@ -84,6 +97,7 @@ const createProduct = async (req, res) => {
       _id: result.insertedId,
     });
 
+<<<<<<< HEAD
     /*
      * We need to create an embedding and upload it to pinecone whenever a new product is added
      */
@@ -117,6 +131,8 @@ const createProduct = async (req, res) => {
         " to pinecone"
     );
 
+=======
+>>>>>>> 8f2c80dec57338e578dbe92e8ce8f266c78eabb5
     res.status(201).json(createdProduct);
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });
@@ -174,6 +190,7 @@ const deleteProduct = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
+<<<<<<< HEAD
     // // Sync with Pinecone
     // try {
     //     await index.deleteOne(id);
@@ -182,18 +199,32 @@ const deleteProduct = async (req, res) => {
     //     console.error("Failed to delete from pinecone:", pineconeError);
     // }
 
+=======
+>>>>>>> 8f2c80dec57338e578dbe92e8ce8f266c78eabb5
     res.json({ message: "Product removed" });
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
 
+<<<<<<< HEAD
 // @desc    Generate product description
 // @route   POST /api/products/generate-description
 const generateDescription = async (req, res) => {
   try {
     const { name, features } = req.body;
     const description = await generateProductDescription(name, features);
+=======
+// Controller: generate product description via AI service
+const generateProductDescription = async (req, res) => {
+  try {
+    const { name, features } = req.body;
+    if (!name) return res.status(400).json({ message: "Missing product name" });
+    const description = await aiGenerateProductDescription(
+      name,
+      features || ""
+    );
+>>>>>>> 8f2c80dec57338e578dbe92e8ce8f266c78eabb5
     res.json({ description });
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });
@@ -220,8 +251,11 @@ const generateDetailsFromImage = async (req, res) => {
   }
 };
 
+<<<<<<< HEAD
 // @desc    Semantic search using vector embeddings
 // @route   GET /api/products/search/semantic
+=======
+>>>>>>> 8f2c80dec57338e578dbe92e8ce8f266c78eabb5
 const semanticSearch = async (req, res) => {
   try {
     const { q } = req.query;
@@ -229,8 +263,16 @@ const semanticSearch = async (req, res) => {
       return res.status(400).json({ message: "Search query is required" });
     }
 
+<<<<<<< HEAD
     // 1. Generate embedding for query
     const vector = await generateEmbedding(q);
+=======
+    console.log(`[Semantic Search] Query: "${q}"`);
+
+    // 1. Generate embedding for query
+    const vector = await generateEmbedding(q);
+    console.log(`[Semantic Search] Generated vector length: ${vector.length}`);
+>>>>>>> 8f2c80dec57338e578dbe92e8ce8f266c78eabb5
 
     // 2. Query Pinecone
     const searchResponse = await index.query({
@@ -241,6 +283,10 @@ const semanticSearch = async (req, res) => {
 
     // 3. Extract matches
     const matches = searchResponse.matches || [];
+<<<<<<< HEAD
+=======
+    console.log(`[Semantic Search] Pinecone found ${matches.length} matches`);
+>>>>>>> 8f2c80dec57338e578dbe92e8ce8f266c78eabb5
 
     if (matches.length === 0) {
       return res.json([]);
@@ -253,6 +299,7 @@ const semanticSearch = async (req, res) => {
       .find({ _id: { $in: ids } })
       .toArray();
 
+<<<<<<< HEAD
     // Attach scores and maintain order
     const results = products
       .map((product) => {
@@ -265,6 +312,30 @@ const semanticSearch = async (req, res) => {
       .sort((a, b) => b.score - a.score); // Re-sort by score
 
     res.json(results);
+=======
+    console.log(
+      `[Semantic Search] MongoDB returned ${products.length} products`
+    );
+
+    const results = products.map((product) => {
+      const match = matches.find((m) => m.id === product._id.toString());
+      return {
+        ...product,
+        score: match ? match.score : 0,
+      };
+    });
+
+    console.log(
+      "[Semantic Search] All matches with scores:",
+      results.map((r) => ({ name: r.name, score: r.score }))
+    );
+
+    const finalResults = results
+      .filter((product) => product.score > 0.45) // Filter out low relevance matches
+      .sort((a, b) => b.score - a.score); // Re-sort by score
+
+    res.json(finalResults);
+>>>>>>> 8f2c80dec57338e578dbe92e8ce8f266c78eabb5
   } catch (error) {
     console.error("Semantic Search Error:", error);
     res
@@ -279,7 +350,11 @@ module.exports = {
   createProduct,
   updateProduct,
   deleteProduct,
+<<<<<<< HEAD
   generateDescription,
+=======
+  generateProductDescription,
+>>>>>>> 8f2c80dec57338e578dbe92e8ce8f266c78eabb5
   generateDetailsFromImage,
   semanticSearch,
 };

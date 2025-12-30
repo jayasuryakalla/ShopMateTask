@@ -17,7 +17,11 @@ const SemanticSearch = () => {
       setLoading(true);
       try {
         const response = await axios.get(
+<<<<<<< HEAD
           `http://localhost:3001/api/products/search/semantic?q=${encodeURIComponent(
+=======
+          `http://localhost:3001/api/products/search/semantic-search?q=${encodeURIComponent(
+>>>>>>> 8f2c80dec57338e578dbe92e8ce8f266c78eabb5
             query
           )}`
         );

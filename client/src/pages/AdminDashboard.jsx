@@ -291,7 +291,11 @@ const AdminDashboard = () => {
                             type="button"
                             onClick={generateDetailsFromImage}
                             disabled={isGeneratingFromImage}
+<<<<<<< HEAD
                             className="text-sm text-indigo-600 hover:text-indigo-800 flex items-center gap-1 disabled:opacity-50"
+=======
+                            className="text-xs text-indigo-600 hover:text-indigo-800 flex items-center gap-1 disabled:opacity-50"
+>>>>>>> 8f2c80dec57338e578dbe92e8ce8f266c78eabb5
                           >
                             <Camera size={14} />
                             {isGeneratingFromImage
@@ -348,7 +352,11 @@ const AdminDashboard = () => {
                           type="button"
                           onClick={generateDescription}
                           disabled={isGeneratingDescription}
+<<<<<<< HEAD
                           className="text font-bold bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent"
+=======
+                          className="font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent"
+>>>>>>> 8f2c80dec57338e578dbe92e8ce8f266c78eabb5
                         >
                           {isGeneratingDescription
                             ? "Generating..."

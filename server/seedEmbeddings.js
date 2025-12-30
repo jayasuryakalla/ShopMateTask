@@ -40,12 +40,22 @@ async function main() {
   // For each product, generate embedding
   for (const product of products) {
     const response = await ai.models.embedContent({
+<<<<<<< HEAD
       model: "gemini-embedding-001",
+=======
+      model: "text-embedding-004",
+>>>>>>> 8f2c80dec57338e578dbe92e8ce8f266c78eabb5
       contents:
         "Product Name: " +
         product.name +
         ", Product Description: " +
         product.description,
+<<<<<<< HEAD
+=======
+      config: {
+        taskType: "RETRIEVAL_DOCUMENT",
+      },
+>>>>>>> 8f2c80dec57338e578dbe92e8ce8f266c78eabb5
     });
 
     console.log("Created embedding for product: " + product.name);

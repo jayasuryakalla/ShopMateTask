@@ -12,9 +12,12 @@ const Navbar = () => {
     if (searchTerm.trim()) {
       navigate(`/semantic-search?q=${encodeURIComponent(searchTerm)}`);
     }
+<<<<<<< HEAD
     else if(searchTerm.trim() === ""){
       navigate(`/`);
     }
+=======
+>>>>>>> 8f2c80dec57338e578dbe92e8ce8f266c78eabb5
   };
 
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
